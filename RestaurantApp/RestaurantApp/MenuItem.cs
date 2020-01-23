@@ -10,12 +10,21 @@ namespace RestaurantApp
     class MenuItem
     {
         #region Properties
-        public int ID { get; set; }
+        private static int lastIDNumber;
+        public int ID { get; private set; }
         public string Name { get; set; }
         public string Description { get; set; }
         public decimal Price { get; set; }
+        public Category Category { get; set; }
         // Pending: image
-        // Pending: category
+
+        #endregion
+
+        #region Constructor
+        public MenuItem()
+        {
+            ID = ++lastIDNumber;
+        }
         #endregion
 
         #region Methods

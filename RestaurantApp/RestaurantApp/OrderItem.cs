@@ -4,17 +4,32 @@ using System.Text;
 
 namespace RestaurantApp
 {
+    enum OrderItemStatus
+    {
+        Open,
+        InProgress,
+        ReadyToServe,
+        Served
+    }
     /// <summary>
     /// Defines each item in an order
     /// </summary>
     class OrderItem
     {
         #region Properties
-        public int ID { get; set; }
+        private static int lastIDNumber;
+        public int ID { get; private set; }
+        public MenuItem MenuItem { get; set; }
         public int Quantity { get; set; } //Pending: Quantity cannot be negative
         public decimal Price { get; set; }
-        //Pending: declare Menu Item 
-        //Pending: set OrderLine price equal to multiplication of Menu Item and Quantity
+        public OrderItemStatus Status { get; set; }
+        #endregion
+
+        #region Constructor
+        public OrderItem()
+        {
+            ID = ++lastIDNumber;
+        }
         #endregion
 
         #region Methods
