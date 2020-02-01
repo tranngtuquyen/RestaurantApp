@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace RestaurantApp
 {
     static class OrderManager
     {
+        public static List<Order> Orders { get; set; }
         /// <summary>
         /// Create order for a table
         /// </summary>
@@ -18,8 +20,9 @@ namespace RestaurantApp
             {
                 TableNumber = tableNumber,
                 Status = OrderStatus.New,
-                CustomerNote = customerNote,
+                CustomerNote = customerNote
             };
+
             return order;
         }
 

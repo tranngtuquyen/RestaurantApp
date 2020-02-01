@@ -25,7 +25,7 @@ namespace RestaurantApp
         public DateTime CreatedDateTime { get; private set; }
         public OrderStatus Status { get; set; }
         public decimal Price { get; set; } //Pending: Calculate total price of order items in an order
-        //Pending: list of order items
+        public List<OrderItem> OrderItems { get; set; }
         #endregion
 
         #region Constructor
@@ -33,11 +33,20 @@ namespace RestaurantApp
         {
             ID = ++lastIDNumber;
             CreatedDateTime = DateTime.UtcNow;
+            OrderItems = new List<OrderItem>();
         }
         #endregion
 
         #region Methods
+        public decimal GetOrderPrice()
+        {
+            foreach (var orderItem in OrderItems)
+            {
+                Price += orderItem.Price;
+            }
 
+            return Price;
+        }
         #endregion
     }
 }

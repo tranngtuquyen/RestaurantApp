@@ -19,7 +19,7 @@ namespace RestaurantApp
                 Order = order,
                 Status = ReceiptStatus.Pending,
                 SubTotal = order.Price,
-                Tax = 10,
+                Tax = 0.1M,
             };
 
             var restaurant = new Restaurant
@@ -31,7 +31,7 @@ namespace RestaurantApp
 
             receipt.Restaurant = restaurant;
 
-            receipt.Total = receipt.SubTotal * (1 + receipt.Tax / 100);
+            receipt.Total = receipt.SubTotal * (1 + receipt.Tax);
 
             return receipt;
         }
