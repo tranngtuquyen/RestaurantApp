@@ -8,9 +8,9 @@ namespace RestaurantApp
     {
         New,
         InProgress,
-        Cancelled,
-        Billed,
-        Completed
+        ReadyToBill,
+        Completed,
+        Cancelled
     }
     /// <summary>
     /// Defines an order
@@ -24,7 +24,7 @@ namespace RestaurantApp
         public string CustomerNote { get; set; }
         public DateTime CreatedDateTime { get; private set; }
         public OrderStatus Status { get; set; }
-        public decimal Price { get; set; } //Pending: Calculate total price of order items in an order
+        public decimal Price { get; set; }
         public List<OrderItem> OrderItems { get; set; }
         #endregion
 
@@ -38,8 +38,10 @@ namespace RestaurantApp
         #endregion
 
         #region Methods
-        public decimal GetOrderPrice()
+        public decimal CalculateOrderPrice()
         {
+            Price = 0;
+
             foreach (var orderItem in OrderItems)
             {
                 Price += orderItem.Price;

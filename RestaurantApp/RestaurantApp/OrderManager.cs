@@ -49,5 +49,19 @@ namespace RestaurantApp
 
             return orderItem;
         }
+
+        public static Order GetPendingOrderByTableNumber(string tableNumber)
+        {
+            var orders = Orders;
+            var order = orders.SingleOrDefault(o => o.TableNumber == tableNumber && o.Status != OrderStatus.Cancelled && o.Status != OrderStatus.Completed);
+            return order;
+        }
+
+        public static OrderItem GetOrderItemByID(Order order, int id)
+        {
+            var orderItems = order.OrderItems;
+            var orderItem = orderItems.SingleOrDefault(i => i.ID == id);
+            return orderItem;
+        }
     }
 }

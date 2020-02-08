@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace RestaurantApp
@@ -27,6 +28,15 @@ namespace RestaurantApp
             };
 
             return menuItem;
-        } 
+        }
+
+        public static Category GetCategoryByID(int id, List<Category> categories)
+        {
+            return categories.SingleOrDefault(c => c.ID == id);
+        }
+        public static MenuItem GetMenuItemByID(int id, List<MenuItem> menuItems)
+        {
+            return menuItems.SingleOrDefault(i => i.ID == id);
+        }
     }
 }
