@@ -17,19 +17,15 @@ namespace RestaurantApp
     class OrderItem
     {
         #region Properties
-        private static int lastIDNumber;
-        public int ID { get; private set; }
+        public int ID { get; set; }
         public MenuItem MenuItem { get; set; }
-        public int Quantity { get; set; } //Pending: Quantity cannot be negative
+        public int MenuItemID { get; set; }
+        public int Quantity { get; set; }
         public decimal Price { get; set; }
         public OrderItemStatus Status { get; set; }
-        #endregion
 
-        #region Constructor
-        public OrderItem()
-        {
-            ID = ++lastIDNumber;
-        }
+        public Order Order { get; set; }
+        public int OrderID { get; set; }
         #endregion
 
         #region Methods

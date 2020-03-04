@@ -7,7 +7,8 @@ namespace RestaurantApp
 {
     static class OrderManager
     {
-        public static List<Order> Orders { get; set; }
+        public static RestaurantContext DB;
+        
         /// <summary>
         /// Create order for a table
         /// </summary>
@@ -20,10 +21,14 @@ namespace RestaurantApp
             {
                 TableNumber = tableNumber,
                 Status = OrderStatus.New,
-                CustomerNote = customerNote
+                CustomerNote = customerNote,
+                Price = 0
             };
 
-            return order;
+            DB.Orders.Add(order);
+            DB.SaveChanges();
+
+            return DB.Orders.SingleOrDefault(o => o.ID == order.ID);
         }
 
         /// <summary>
@@ -32,36 +37,98 @@ namespace RestaurantApp
         /// <param name="menuItem">Menu Item</param>
         /// <param name="quantity">Quantity</param>
         /// <returns>Newly created order item</returns>
-        public static OrderItem CreateOrderItem(MenuItem menuItem, int quantity = 1)
+        public static OrderItem CreateOrderItem(MenuItem menuItem, Order order, int quantity)
         {
             if (quantity < 0)
             {
-                quantity = 0;
+                throw new ArgumentOutOfRangeException("quantity", "Quantity cannot be negative");
             }
 
             var orderItem = new OrderItem
             {
                 Status = OrderItemStatus.Open,
-                MenuItem = menuItem,
                 Quantity = quantity,
-                Price = menuItem.Price * quantity
+                MenuItem = menuItem,
+                Price = menuItem.Price * quantity,
+                MenuItemID = menuItem.ID,
+                Order = order,
+                OrderID = order.ID
             };
 
-            return orderItem;
+            DB.OrderItems.Add(orderItem);
+            DB.SaveChanges();
+
+            return DB.OrderItems.SingleOrDefault(p => p.ID == orderItem.ID);
         }
 
+        public static void CalculateTotalOrderPrice(Order order)
+        {
+            var orderItems = DB.OrderItems.Where(i => i.Order == order).ToList();
+            order.Price = 0;
+            foreach (var item in orderItems)
+            {
+                order.Price += item.Price;
+            }
+            DB.SaveChanges();
+        }
+
+        /// <summary>
+        /// Get pending order by table number
+        /// </summary>
+        /// <param name="tableNumber"></param>
+        /// <exception cref="ArgumentException"></exception>
+        /// <returns></returns>
         public static Order GetPendingOrderByTableNumber(string tableNumber)
         {
-            var orders = Orders;
-            var order = orders.SingleOrDefault(o => o.TableNumber == tableNumber && o.Status != OrderStatus.Cancelled && o.Status != OrderStatus.Completed);
+            var order = DB.Orders.SingleOrDefault(o => o.TableNumber == tableNumber && o.Status != OrderStatus.Cancelled && o.Status != OrderStatus.Completed);
+            if (order == null)
+            {
+                throw new ArgumentException("Invalid table number!");
+            }
             return order;
         }
 
-        public static OrderItem GetOrderItemByID(Order order, int id)
+        /// <summary>
+        /// Get order item by id
+        /// </summary>
+        /// <param name="order"></param>
+        /// <param name="id"></param>
+        /// <exception cref="ArgumentException"></exception>
+        /// <returns></returns>
+        public static OrderItem GetOrderItemByID(int id)
         {
-            var orderItems = order.OrderItems;
-            var orderItem = orderItems.SingleOrDefault(i => i.ID == id);
+            var orderItem = DB.OrderItems.SingleOrDefault(i => i.ID == id);
+            if (orderItem == null)
+            {
+                throw new ArgumentException("Invalid order item id!");
+            }
             return orderItem;
+        }
+
+        public static List<OrderItem> GetAllOrderItemsInOrder(Order order)
+        {
+            var orderItems = DB.OrderItems.Where(i => i.Order == order).ToList();
+            return orderItems;
+        }
+
+        public static void SaveChangesOnOrder(Order editedOrder)
+        {
+            var order = DB.Orders.SingleOrDefault(o => o.ID == editedOrder.ID);
+            order = editedOrder;
+            DB.SaveChanges();
+        }
+
+        public static void SaveChangesOnOrderItem(OrderItem editedOrderItem)
+        {
+            var orderItem = DB.OrderItems.SingleOrDefault(i => i.ID == editedOrderItem.ID);
+            orderItem = editedOrderItem;
+            DB.SaveChanges();
+        }
+
+        public static List<Order> GetOrdersPendingReceipts()
+        {
+            var orders = DB.Orders.Where(o => o.Status == OrderStatus.New || o.Status == OrderStatus.InProgress || o.Status == OrderStatus.ReadyToBill).ToList();
+            return orders;
         }
     }
 }

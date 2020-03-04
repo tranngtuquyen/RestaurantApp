@@ -10,17 +10,12 @@ namespace RestaurantApp
     class Category
     {
         #region Properties
-        private static int lastIDNumber = 0;
-        public int ID { get; private set; }
+        public int ID { get; set; }
         public string Name { get; set; }
+        public Menu Menu { get; set; }
+        public int MenuID { get; set; }
         #endregion
-        #region Constructors
-        public Category()
-        {
-            ID = ++lastIDNumber;
-        }
-        #endregion
-
+        
         #region Methods
 
         #endregion

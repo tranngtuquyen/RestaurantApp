@@ -17,9 +17,9 @@ namespace RestaurantApp
     class Receipt
     {
         #region Properties
-        private static int lastIDNumber = 0;
         public int ID { get; private set; }
         public Order Order { get; set; }
+        public int OrderID { get; set; }
         public ReceiptStatus Status { get; set; }
         /// <summary>
         /// Total cost before tax
@@ -31,13 +31,11 @@ namespace RestaurantApp
         /// </summary>
         public decimal Total { get; set; }
         public DateTime CreatedDateTime { get; private set; }
-        public Restaurant Restaurant { get; set; }
         #endregion
 
         #region Construction
         public Receipt()
         {
-            ID = ++lastIDNumber;
             CreatedDateTime = DateTime.UtcNow;
         }
         #endregion
