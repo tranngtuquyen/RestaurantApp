@@ -5,15 +5,19 @@ using System.Text;
 
 namespace RestaurantApp
 {
-    static class ReceiptManager
+    public class ReceiptManager
     {
-        public static RestaurantContext DB;
+        private readonly RestaurantContext _context;
+        public ReceiptManager(RestaurantContext context)
+        {
+            _context = context;
+        }
         /// <summary>
         /// Create receipt for an order
         /// </summary>
         /// <param name="order">Order</param>
         /// <returns>Newly created receipt</returns>
-        public static Receipt CreateReceipt(Order order)
+        public Receipt CreateReceipt(Order order, string userID, decimal tax)
         {
             var receipt = new Receipt
             {
@@ -21,15 +25,34 @@ namespace RestaurantApp
                 OrderID = order.ID,
                 Status = ReceiptStatus.Pending,
                 SubTotal = order.Price,
-                Tax = 0.1M,
+                Tax = tax,
+                UserID = userID
             };
             
-            receipt.Total = receipt.SubTotal * (1 + receipt.Tax);
+            receipt.Total = receipt.SubTotal * (1 + receipt.Tax / 100);
 
-            DB.Receipts.Add(receipt);
-            DB.SaveChanges();
+            _context.Receipts.Add(receipt);
+            _context.SaveChanges();
 
-            return DB.Receipts.SingleOrDefault(r => r.ID == receipt.ID);
+            return _context.Receipts.SingleOrDefault(r => r.ID == receipt.ID);
+        }
+
+        public List<Receipt> GetAllReceipts(string userID)
+        {
+            return _context.Receipts.Where(r => r.UserID == userID).OrderByDescending(o => o.CreatedDateTime).ToList();
+        }
+
+        public Receipt GetReceiptByID(int id)
+        {
+            return _context.Receipts.SingleOrDefault(r => r.ID == id);
+        }
+
+        public Receipt UpdateReceipt(Receipt newReceipt)
+        {
+            var oldReceipt = _context.Receipts.SingleOrDefault(r => r.ID == newReceipt.ID);
+            oldReceipt.Status = newReceipt.Status;
+            _context.SaveChanges();
+            return oldReceipt;
         }
     }
 }

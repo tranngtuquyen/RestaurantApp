@@ -5,14 +5,17 @@ using System.Text;
 
 namespace RestaurantApp
 {
-    class RestaurantContext : DbContext
+    public class RestaurantContext : DbContext
     {
+        public RestaurantContext() { }
+        public RestaurantContext(DbContextOptions<RestaurantContext> options) { }
         public DbSet<Menu> Menus { get; set; }
         public DbSet<Category> Categories { get; set; }
         public DbSet<MenuItem> MenuItems { get; set; }
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderItem> OrderItems { get; set; }
         public DbSet<Receipt> Receipts { get; set; }
+        public DbSet<Restaurant> Restaurant { get; set; }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             optionsBuilder.UseSqlServer(@"Data Source = (localdb)\MSSQLLocalDB; Initial Catalog = RestaurantApp; Integrated Security = True; Connect Timeout = 30");
@@ -150,6 +153,17 @@ namespace RestaurantApp
                 entity.HasOne(e => e.Order)
                     .WithMany()
                     .HasForeignKey(e => e.OrderID);
+            });
+
+            modelBuilder.Entity<Restaurant>(entity =>
+            {
+                entity.ToTable("Restaurant");
+                entity.HasKey(e => e.ID)
+                    .HasName("PK_Restaurant");
+                entity.Property(e => e.ID)
+                    .ValueGeneratedOnAdd();
+                entity.Property(e => e.Tax)
+                    .IsRequired();
             });
         }
     }

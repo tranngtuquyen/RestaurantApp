@@ -1,0 +1,66 @@
+﻿@model RestaurantUI.Models.ReceiptDetailsViewModel
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Receipts</h1>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.Order.TableNumber)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Receipt.Status)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Receipt.SubTotal)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Receipt.Tax)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Receipt.Total)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Receipt.CreatedDateTime)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model.Receipts) {
+    var orderID = item.OrderID;
+    var order = Model.Orders.SingleOrDefault(o => o.ID == orderID);
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => order.TableNumber)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Status)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.SubTotal)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Tax)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Total)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.CreatedDateTime)
+            </td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.ID">Edit</a> |
+                <a asp-action="Details" asp-route-id="@item.ID">Details</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>

@@ -6,25 +6,42 @@ using System.Text;
 
 namespace RestaurantApp
 {
-    static class MenuManager
+    public class MenuManager
     {
-        public static RestaurantContext DB;
-
-        public static Menu CreateMenu(string name)
+        public readonly RestaurantContext _context;
+                
+        public MenuManager(RestaurantContext context)
         {
-            var menu = new Menu
-            {
-                Name = name
-            };
-
-            DB.Menus.Add(menu);
-            DB.SaveChanges();
-            return DB.Menus.SingleOrDefault(m => m.ID == menu.ID);
+            this._context = context;
         }
 
-        public static Category CreateCategory(string categoryName, Menu menu)
+        public Menu CreateMenu(string name, string userID)
         {
-            var checkNull = DB.Categories.SingleOrDefault(c => c.Name == categoryName && c.Menu == menu);
+            if (userID == null)
+            {
+                throw new ArgumentNullException();
+            }
+
+            var menuIsExisted = _context.Menus.SingleOrDefault(m => m.UserID == userID && m.Name == name);
+            if (menuIsExisted != null)
+            {
+                throw new ArgumentException();
+            }
+            
+            var menu = new Menu
+            {
+                Name = name,
+                UserID = userID
+            };
+
+            _context.Menus.Add(menu);
+            _context.SaveChanges();
+            return _context.Menus.SingleOrDefault(m => m.ID == menu.ID);
+        }
+
+        public Category CreateCategory(string categoryName, Menu menu, string userID)
+        {
+            var checkNull = _context.Categories.SingleOrDefault(c => c.Name == categoryName && c.Menu == menu && c.UserID == userID);
             
             if (checkNull != null)
             {
@@ -35,22 +52,23 @@ namespace RestaurantApp
             {
                 Name = categoryName,
                 Menu = menu,
-                MenuID = menu.ID
+                MenuID = menu.ID,
+                UserID = userID
             };
 
-            DB.Categories.Add(category);
-            DB.SaveChanges();
-            return DB.Categories.SingleOrDefault(c => c.ID == category.ID);
+            _context.Categories.Add(category);
+            _context.SaveChanges();
+            return _context.Categories.SingleOrDefault(c => c.ID == category.ID);
         }
 
-        public static MenuItem CreateMenuItem(string itemName, string itemDescription, decimal price, Category category, Menu menu)
+        public MenuItem CreateMenuItem(string itemName, string itemDescription, decimal price, Category category, Menu menu, string userID)
         {
             if (price < 0 )
             {
                 throw new ArgumentOutOfRangeException("price", "Menu item price cannot be negative!");
             }
 
-            var checkNull = DB.MenuItems.SingleOrDefault(i => i.Name == itemName && i.Category == category && i.Menu == menu);
+            var checkNull = _context.MenuItems.SingleOrDefault(i => i.Name == itemName && i.Category == category && i.Menu == menu && i.UserID == userID);
 
             if (checkNull != null)
             {
@@ -64,12 +82,13 @@ namespace RestaurantApp
                 Category = category,
                 CategoryID = category.ID,
                 Menu = menu,
-                MenuID = menu.ID
+                MenuID = menu.ID,
+                UserID = userID
             };
             
-            DB.MenuItems.Add(menuItem);
-            DB.SaveChanges();
-            return DB.MenuItems.SingleOrDefault(i => i.ID == menuItem.ID);
+            _context.MenuItems.Add(menuItem);
+            _context.SaveChanges();
+            return _context.MenuItems.SingleOrDefault(i => i.ID == menuItem.ID);
         }
         /// <summary>
         /// Get menu by id
@@ -77,13 +96,10 @@ namespace RestaurantApp
         /// <param name="id"></param>
         /// <exception cref="ArgumentException"></exception>
         /// <returns></returns>
-        public static Menu GetMenuByID(int id)
+        public Menu GetMenuByID(int id)
         {
-            var menu = DB.Menus.SingleOrDefault(m => m.ID == id);
-            if (menu == null)
-            {
-                throw new ArgumentException("Invalid menu id");
-            }
+            var menu = _context.Menus.SingleOrDefault(m => m.ID == id);
+            
             return menu;
         }
 
@@ -94,9 +110,9 @@ namespace RestaurantApp
         /// <param name="categories"></param>
         /// <exception cref="ArgumentException"></exception>
         /// <returns></returns>
-        public static Category GetCategoryByID(int id)
+        public Category GetCategoryByID(int id)
         {
-            var category = DB.Categories.SingleOrDefault(c => c.ID == id);
+            var category = _context.Categories.SingleOrDefault(c => c.ID == id);
             if (category == null)
             {
                 throw new ArgumentException("Invalid category id!");
@@ -110,9 +126,9 @@ namespace RestaurantApp
         /// <param name="menuItems"></param>
         /// <exception cref="ArgumentException"></exception>
         /// <returns></returns>
-        public static MenuItem GetMenuItemByID(int id)
+        public MenuItem GetMenuItemByID(int id)
         {
-            var menuItem = DB.MenuItems.SingleOrDefault(i => i.ID == id);
+            var menuItem = _context.MenuItems.SingleOrDefault(i => i.ID == id);
             if (menuItem == null)
             {
                 throw new ArgumentException("Invalid menu item id!");
@@ -120,29 +136,70 @@ namespace RestaurantApp
             return menuItem;
         }
 
-        public static List<Menu> GetAllMenus()
+        public List<Menu> GetAllMenus(string userID)
         {
-            return DB.Menus.ToList();
+            if (string.IsNullOrEmpty(userID))
+            {
+                throw new ArgumentNullException(nameof(userID));
+            }
+            var listMenus = _context.Menus.Where(m => m.UserID == userID).OrderBy(m => m.Name).ToList();
+            return listMenus;
         }
 
-        public static List<Category> GetAllCategory()
+        public List<Category> GetAllCategory()
         {
-            return DB.Categories.ToList();
+            return _context.Categories.ToList();
         }
 
-        public static List<MenuItem> GetAllMenuItems()
+        public List<MenuItem> GetAllMenuItems(string userID)
         {
-            return DB.MenuItems.ToList();
+            return _context.MenuItems.Where(i => i.UserID == userID).ToList();
         }
 
-        public static List<Category> GetAllCategoriesByMenu(Menu menu)
+        public List<Category> GetAllCategoriesByMenu(Menu menu)
         {
-            return DB.Categories.Where(c => c.Menu == menu).ToList();
+            return _context.Categories.Where(c => c.Menu == menu).OrderBy(c => c.Name).ToList();
         }
 
-        public static List<MenuItem> GetAllMenuItemsByCategoryInMenu(Category category, Menu menu)
+        public List<MenuItem> GetAllMenuItemsByCategoryInMenu(Category category, Menu menu)
         {
-            return DB.MenuItems.Where(i => i.Category == category && i.Menu == menu).ToList();
+            return _context.MenuItems.Where(i => i.Category == category && i.Menu == menu).OrderBy(i => i.Name).ToList();
+        }
+
+        public List<MenuItem> GetAllMenuItemsByMenu(Menu menu)
+        {
+            return _context.MenuItems.Where(i => i.Menu == menu).OrderBy(i => i.Name).ToList();
+        }
+
+        public void MenuUpdates(Menu editMenu)
+        {
+            var oldMenu = _context.Menus.SingleOrDefault(m => m.ID == editMenu.ID);
+            oldMenu.Name = editMenu.Name;
+            _context.SaveChanges();
+        }
+
+        public MenuItem MenuItemUpdates(MenuItem menuItem)
+        {
+            var oldMenuItem = _context.MenuItems.SingleOrDefault(i => i.ID == menuItem.ID);
+            oldMenuItem.Name = menuItem.Name;
+            oldMenuItem.Description = menuItem.Description;
+            var price = menuItem.Price;
+            if (price < 0)
+            {
+                throw new ArgumentOutOfRangeException("Price cannot be negative");
+            }
+            oldMenuItem.Price = menuItem.Price;
+            _context.SaveChanges();
+            return oldMenuItem;
+        }
+
+        public Category CategoryUpdates(Category category)
+        {
+            var oldCategory = _context.Categories.SingleOrDefault(c => c.ID == category.ID);
+            oldCategory.Name = category.Name;
+            _context.SaveChanges();
+            return oldCategory;
         }
     }
+    
 }

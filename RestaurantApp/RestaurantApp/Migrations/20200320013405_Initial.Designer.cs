@@ -10,16 +10,44 @@ using RestaurantApp;
 namespace RestaurantApp.Migrations
 {
     [DbContext(typeof(RestaurantContext))]
-    [Migration("20200303015744_2020030201")]
-    partial class _2020030201
+    [Migration("20200320013405_Initial")]
+    partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "3.1.1")
+                .HasAnnotation("ProductVersion", "3.1.0")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128)
                 .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+            modelBuilder.Entity("RestaurantApp.Branch", b =>
+                {
+                    b.Property<int>("ID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<string>("Address")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("EmailAddress")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PhoneNumber")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("Tax")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("ID")
+                        .HasName("PK_Branch");
+
+                    b.ToTable("Branches");
+                });
 
             modelBuilder.Entity("RestaurantApp.Category", b =>
                 {
@@ -33,6 +61,9 @@ namespace RestaurantApp.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UserID")
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("ID")
@@ -52,6 +83,9 @@ namespace RestaurantApp.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UserID")
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("ID")
@@ -82,6 +116,9 @@ namespace RestaurantApp.Migrations
 
                     b.Property<decimal>("Price")
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("UserID")
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("ID")
                         .HasName("PK_MenuItem");
@@ -116,6 +153,9 @@ namespace RestaurantApp.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("UserID")
+                        .HasColumnType("nvarchar(max)");
+
                     b.HasKey("ID")
                         .HasName("PK_Orders");
 
@@ -144,6 +184,9 @@ namespace RestaurantApp.Migrations
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
+                    b.Property<string>("UserID")
+                        .HasColumnType("nvarchar(max)");
+
                     b.HasKey("ID")
                         .HasName("PK_OrderItems");
 
@@ -160,6 +203,9 @@ namespace RestaurantApp.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<int>("BranchID")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedDateTime")
                         .HasColumnType("datetime2");
@@ -179,8 +225,13 @@ namespace RestaurantApp.Migrations
                     b.Property<decimal>("Total")
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<string>("UserID")
+                        .HasColumnType("nvarchar(max)");
+
                     b.HasKey("ID")
                         .HasName("PK_Receipts");
+
+                    b.HasIndex("BranchID");
 
                     b.HasIndex("OrderID");
 
@@ -228,6 +279,12 @@ namespace RestaurantApp.Migrations
 
             modelBuilder.Entity("RestaurantApp.Receipt", b =>
                 {
+                    b.HasOne("RestaurantApp.Branch", "Branch")
+                        .WithMany()
+                        .HasForeignKey("BranchID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("RestaurantApp.Order", "Order")
                         .WithMany()
                         .HasForeignKey("OrderID")

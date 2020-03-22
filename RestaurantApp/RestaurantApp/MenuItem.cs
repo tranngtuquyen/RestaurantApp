@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Text;
 
 namespace RestaurantApp
@@ -7,18 +8,21 @@ namespace RestaurantApp
     /// <summary>
     /// Defines each item in the menu
     /// </summary>
-    class MenuItem
+    public class MenuItem
     {
         #region Properties
-        public int ID { get; private set; }
+        public int ID { get; set; }
+        [Required]
         public string Name { get; set; }
         public string Description { get; set; }
+        [Required][DataType(DataType.Currency)]
         public decimal Price { get; set; }
        
         public Category Category { get; set; }
         public int CategoryID { get; set; }
         public Menu Menu { get; set; }
         public int MenuID { get; set; }
+        public string UserID { get; set; }
         // Pending: image
 
         #endregion

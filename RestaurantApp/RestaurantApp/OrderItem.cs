@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Text;
 
 namespace RestaurantApp
 {
-    enum OrderItemStatus
+    public enum OrderItemStatus
     {
         Open,
         InProgress,
@@ -14,18 +15,23 @@ namespace RestaurantApp
     /// <summary>
     /// Defines each item in an order
     /// </summary>
-    class OrderItem
+    public class OrderItem
     {
         #region Properties
         public int ID { get; set; }
         public MenuItem MenuItem { get; set; }
         public int MenuItemID { get; set; }
+
+        [Required]
         public int Quantity { get; set; }
+
+        [Required][DataType(DataType.Currency)]
         public decimal Price { get; set; }
         public OrderItemStatus Status { get; set; }
 
         public Order Order { get; set; }
         public int OrderID { get; set; }
+        public string UserID { get; set; }
         #endregion
 
         #region Methods

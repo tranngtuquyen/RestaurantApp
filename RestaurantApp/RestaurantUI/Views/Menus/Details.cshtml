@@ -1,0 +1,70 @@
+﻿@model RestaurantUI.Models.MenuDetailsViewModel
+
+@{
+    ViewData["Title"] = "ViewMenuDetails";
+}
+
+<h1>@Model.Menu.Name</h1>
+
+<p>
+    <a asp-action="CreateCategory" asp-route-menuID="@Model.Menu.ID">Create New Category</a>
+</p>
+@foreach (var category in Model.Categories)
+{
+    <h3> @category.Name</h3>
+
+    var menuItems = Model.MenuItems.Where(i => i.Category == category);
+    <p>
+        <a asp-action="EditCategory" asp-route-id="@category.ID">Edit Category</a>
+    </p>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @nameof(RestaurantApp.MenuItem.Name)
+            </th>
+            <th>
+                @nameof(RestaurantApp.MenuItem.Description)
+            </th>
+            <th>
+                @nameof(RestaurantApp.MenuItem.Price)
+            </th>
+            <th>
+                @nameof(RestaurantApp.MenuItem.Category)
+            </th>
+            <th>
+                @nameof(RestaurantApp.MenuItem.Menu)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in menuItems)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Name)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Description)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Price)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Category.Name)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Menu.Name)
+                </td>
+                <td>
+                    <a asp-action="EditMenuItem" asp-route-id="@item.ID">Edit</a>                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+<p>
+    <a asp-action="CreateMenuItem" asp-route-menuID="@Model.Menu.ID" asp-route-categoryID="@category.ID">Create New Food Item</a>
+</p>
+}

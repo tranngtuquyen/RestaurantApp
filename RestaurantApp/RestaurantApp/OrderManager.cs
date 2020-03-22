@@ -5,9 +5,13 @@ using System.Text;
 
 namespace RestaurantApp
 {
-    static class OrderManager
+    public class OrderManager
     {
-        public static RestaurantContext DB;
+        public RestaurantContext _context;
+        public OrderManager(RestaurantContext context)
+        {
+            _context = context;
+        }
         
         /// <summary>
         /// Create order for a table
@@ -15,20 +19,21 @@ namespace RestaurantApp
         /// <param name="tableNumber">Table Number</param>
         /// <param name="customerNote">Customer Note</param>
         /// <returns>Newly created order</returns>
-        public static Order CreateOrder(string tableNumber, string customerNote = "None")
+        public Order CreateOrder(string tableNumber, string userID, string customerNote = "None")
         {
             var order = new Order
             {
                 TableNumber = tableNumber,
                 Status = OrderStatus.New,
                 CustomerNote = customerNote,
-                Price = 0
+                Price = 0,
+                UserID = userID
             };
 
-            DB.Orders.Add(order);
-            DB.SaveChanges();
+            _context.Orders.Add(order);
+            _context.SaveChanges();
 
-            return DB.Orders.SingleOrDefault(o => o.ID == order.ID);
+            return _context.Orders.SingleOrDefault(o => o.ID == order.ID);
         }
 
         /// <summary>
@@ -37,7 +42,7 @@ namespace RestaurantApp
         /// <param name="menuItem">Menu Item</param>
         /// <param name="quantity">Quantity</param>
         /// <returns>Newly created order item</returns>
-        public static OrderItem CreateOrderItem(MenuItem menuItem, Order order, int quantity)
+        public OrderItem CreateOrderItem(MenuItem menuItem, Order order, int quantity, string userID)
         {
             if (quantity < 0)
             {
@@ -52,24 +57,26 @@ namespace RestaurantApp
                 Price = menuItem.Price * quantity,
                 MenuItemID = menuItem.ID,
                 Order = order,
-                OrderID = order.ID
+                OrderID = order.ID,
+                UserID = userID
             };
 
-            DB.OrderItems.Add(orderItem);
-            DB.SaveChanges();
+            _context.OrderItems.Add(orderItem);
+            _context.SaveChanges();
 
-            return DB.OrderItems.SingleOrDefault(p => p.ID == orderItem.ID);
+            return _context.OrderItems.SingleOrDefault(p => p.ID == orderItem.ID);
         }
 
-        public static void CalculateTotalOrderPrice(Order order)
+        public void CalculateTotalOrderPrice(Order order)
         {
-            var orderItems = DB.OrderItems.Where(i => i.Order == order).ToList();
+            var orderItems = _context.OrderItems.Where(i => i.Order == order).ToList();
             order.Price = 0;
             foreach (var item in orderItems)
             {
+                CalculateOrderItemPrice(item);
                 order.Price += item.Price;
             }
-            DB.SaveChanges();
+            _context.SaveChanges();
         }
 
         /// <summary>
@@ -78,9 +85,9 @@ namespace RestaurantApp
         /// <param name="tableNumber"></param>
         /// <exception cref="ArgumentException"></exception>
         /// <returns></returns>
-        public static Order GetPendingOrderByTableNumber(string tableNumber)
+        public Order GetPendingOrderByTableNumber(string tableNumber)
         {
-            var order = DB.Orders.SingleOrDefault(o => o.TableNumber == tableNumber && o.Status != OrderStatus.Cancelled && o.Status != OrderStatus.Completed);
+            var order = _context.Orders.SingleOrDefault(o => o.TableNumber == tableNumber && o.Status != OrderStatus.Cancelled && o.Status != OrderStatus.Completed);
             if (order == null)
             {
                 throw new ArgumentException("Invalid table number!");
@@ -95,9 +102,9 @@ namespace RestaurantApp
         /// <param name="id"></param>
         /// <exception cref="ArgumentException"></exception>
         /// <returns></returns>
-        public static OrderItem GetOrderItemByID(int id)
+        public OrderItem GetOrderItemByID(int id)
         {
-            var orderItem = DB.OrderItems.SingleOrDefault(i => i.ID == id);
+            var orderItem = _context.OrderItems.SingleOrDefault(i => i.ID == id);
             if (orderItem == null)
             {
                 throw new ArgumentException("Invalid order item id!");
@@ -105,30 +112,58 @@ namespace RestaurantApp
             return orderItem;
         }
 
-        public static List<OrderItem> GetAllOrderItemsInOrder(Order order)
+        public List<OrderItem> GetAllOrderItemsInOrder(Order order)
         {
-            var orderItems = DB.OrderItems.Where(i => i.Order == order).ToList();
+            var orderItems = _context.OrderItems.Where(i => i.Order == order).ToList();
             return orderItems;
         }
 
-        public static void SaveChangesOnOrder(Order editedOrder)
+        public Order OrderUpdates(Order editedOrder)
         {
-            var order = DB.Orders.SingleOrDefault(o => o.ID == editedOrder.ID);
-            order = editedOrder;
-            DB.SaveChanges();
+            var order = _context.Orders.SingleOrDefault(o => o.ID == editedOrder.ID);
+            order.TableNumber = editedOrder.TableNumber;
+            order.Status = editedOrder.Status;
+            order.CustomerNote = editedOrder.CustomerNote;
+            _context.SaveChanges();
+            return order;
         }
 
-        public static void SaveChangesOnOrderItem(OrderItem editedOrderItem)
+        public OrderItem OrderItemUpdate(OrderItem editedOrderItem)
         {
-            var orderItem = DB.OrderItems.SingleOrDefault(i => i.ID == editedOrderItem.ID);
-            orderItem = editedOrderItem;
-            DB.SaveChanges();
+            var orderItem = _context.OrderItems.SingleOrDefault(i => i.ID == editedOrderItem.ID);
+            orderItem.Status = editedOrderItem.Status;
+            var quantity = editedOrderItem.Quantity;
+            if (quantity < 0)
+            {
+                throw new ArgumentOutOfRangeException("Quantity cannot be negative");
+            }
+            orderItem.Quantity = quantity;
+            CalculateOrderItemPrice(orderItem);
+            return orderItem;
         }
 
-        public static List<Order> GetOrdersPendingReceipts()
+        public void CalculateOrderItemPrice(OrderItem orderItem)
         {
-            var orders = DB.Orders.Where(o => o.Status == OrderStatus.New || o.Status == OrderStatus.InProgress || o.Status == OrderStatus.ReadyToBill).ToList();
+            var menuItemID = orderItem.MenuItemID;
+            var menuItem = _context.MenuItems.SingleOrDefault(i => i.ID == menuItemID);
+            orderItem.Price = menuItem.Price * orderItem.Quantity;
+            _context.SaveChanges();
+        }
+
+        public List<Order> GetOrdersPendingReceipts(string userID)
+        {
+            var orders = _context.Orders.Where(o => o.UserID == userID)
+                .Where(o => o.Status == OrderStatus.New || o.Status == OrderStatus.InProgress || o.Status == OrderStatus.ReadyToBill)
+                .OrderByDescending(o => o.CreatedDateTime).ToList();
             return orders;
+        }
+        public List<Order> GetAllOrders(string userID)
+        {
+            return _context.Orders.Where(o => o.UserID == userID).OrderByDescending(o => o.CreatedDateTime).ToList();
+        }
+        public Order GetOrderByID(int id)
+        {
+            return _context.Orders.SingleOrDefault(o => o.ID == id);
         }
     }
 }

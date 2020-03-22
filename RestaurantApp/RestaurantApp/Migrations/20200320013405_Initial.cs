@@ -8,12 +8,30 @@ namespace RestaurantApp.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
+                name: "Branches",
+                columns: table => new
+                {
+                    ID = table.Column<int>(nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Name = table.Column<string>(nullable: true),
+                    Address = table.Column<string>(nullable: true),
+                    EmailAddress = table.Column<string>(nullable: true),
+                    PhoneNumber = table.Column<string>(nullable: true),
+                    Tax = table.Column<decimal>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Branch", x => x.ID);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Menus",
                 columns: table => new
                 {
                     ID = table.Column<int>(nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Name = table.Column<string>(nullable: false)
+                    Name = table.Column<string>(nullable: false),
+                    UserID = table.Column<string>(nullable: true)
                 },
                 constraints: table =>
                 {
@@ -30,7 +48,8 @@ namespace RestaurantApp.Migrations
                     CustomerNote = table.Column<string>(nullable: true),
                     CreatedDateTime = table.Column<DateTime>(nullable: false),
                     Status = table.Column<int>(nullable: false),
-                    Price = table.Column<decimal>(nullable: false)
+                    Price = table.Column<decimal>(nullable: false),
+                    UserID = table.Column<string>(nullable: true)
                 },
                 constraints: table =>
                 {
@@ -44,7 +63,8 @@ namespace RestaurantApp.Migrations
                     ID = table.Column<int>(nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(nullable: false),
-                    MenuID = table.Column<int>(nullable: false)
+                    MenuID = table.Column<int>(nullable: false),
+                    UserID = table.Column<string>(nullable: true)
                 },
                 constraints: table =>
                 {
@@ -66,26 +86,27 @@ namespace RestaurantApp.Migrations
                     OrderID = table.Column<int>(nullable: false),
                     Status = table.Column<int>(nullable: false),
                     SubTotal = table.Column<decimal>(nullable: false),
+                    BranchID = table.Column<int>(nullable: false),
                     Tax = table.Column<decimal>(nullable: false),
                     Total = table.Column<decimal>(nullable: false),
                     CreatedDateTime = table.Column<DateTime>(nullable: false),
-                    OrderID1 = table.Column<int>(nullable: true)
+                    UserID = table.Column<string>(nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Receipts", x => x.ID);
+                    table.ForeignKey(
+                        name: "FK_Receipts_Branches_BranchID",
+                        column: x => x.BranchID,
+                        principalTable: "Branches",
+                        principalColumn: "ID",
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_Receipts_Orders_OrderID",
                         column: x => x.OrderID,
                         principalTable: "Orders",
                         principalColumn: "ID",
                         onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_Receipts_Orders_OrderID1",
-                        column: x => x.OrderID1,
-                        principalTable: "Orders",
-                        principalColumn: "ID",
-                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -98,7 +119,8 @@ namespace RestaurantApp.Migrations
                     Description = table.Column<string>(nullable: true),
                     Price = table.Column<decimal>(nullable: false),
                     CategoryID = table.Column<int>(nullable: false),
-                    MenuID = table.Column<int>(nullable: false)
+                    MenuID = table.Column<int>(nullable: false),
+                    UserID = table.Column<string>(nullable: true)
                 },
                 constraints: table =>
                 {
@@ -126,7 +148,8 @@ namespace RestaurantApp.Migrations
                     Quantity = table.Column<int>(nullable: false),
                     Price = table.Column<decimal>(nullable: false),
                     Status = table.Column<int>(nullable: false),
-                    OrderID = table.Column<int>(nullable: false)
+                    OrderID = table.Column<int>(nullable: false),
+                    UserID = table.Column<string>(nullable: true)
                 },
                 constraints: table =>
                 {
@@ -171,16 +194,14 @@ namespace RestaurantApp.Migrations
                 column: "OrderID");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Receipts_BranchID",
+                table: "Receipts",
+                column: "BranchID");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Receipts_OrderID",
                 table: "Receipts",
                 column: "OrderID");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Receipts_OrderID1",
-                table: "Receipts",
-                column: "OrderID1",
-                unique: true,
-                filter: "[OrderID1] IS NOT NULL");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
@@ -193,6 +214,9 @@ namespace RestaurantApp.Migrations
 
             migrationBuilder.DropTable(
                 name: "MenuItems");
+
+            migrationBuilder.DropTable(
+                name: "Branches");
 
             migrationBuilder.DropTable(
                 name: "Orders");
